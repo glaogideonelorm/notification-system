@@ -24,7 +24,7 @@ HNG Task 4 - Distributed Notification System with Microservices
 
 # Clone and setup
 
-git clone <repo-url>
+git clone https://github.com/CodeEnthusiast09/notification-system.git
 cd notification-system
 npm run setup
 
