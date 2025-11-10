@@ -20,7 +20,7 @@ HNG Task 4 - Distributed Notification System with Microservices
 
 ### Setup
 
-\`\`\`bash
+```bash
 
 # Clone and setup
 
@@ -35,7 +35,7 @@ cp .env.example .env
 # Start all services
 
 npm run dev
-\`\`\`
+```
 
 ### Access Points
 
@@ -47,36 +47,36 @@ npm run dev
 
 ### Start individual service
 
-\`\`\`bash
+```bash
 npm run gateway # API Gateway
 npm run email # Email Service
 npm run user # User Service
 npm run push # Push Service
 npm run template # Template Service
-\`\`\`
+```
 
 ### View logs
 
-\`\`\`bash
+```bash
 npm run logs
-\`\`\`
+```
 
 ### Stop services
 
-\`\`\`bash
+```bash
 npm run down
-\`\`\`
+```
 
 ## Project Structure
 
-\`\`\`
+```
 notification-system/
 ├── services/ # Microservices
 ├── shared/ # Shared code
 ├── infrastructure/ # Docker & scripts
 ├── docs/ # Documentation
 └── docker-compose.yml
-\`\`\`
+```
 
 ## Team
 
