@@ -6,9 +6,9 @@ services:
     image: postgres:15-alpine
     container_name: notif-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-notif_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-notif_password}
-      POSTGRES_DB: ${POSTGRES_DB:-notification_system}
+      POSTGRES_USER: ${POSTGRES_USER:-ibrahim}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-IobqjSBr9DzV6vSbbyNCpwpIOhwpNXyF}
+      POSTGRES_DB: ${POSTGRES_DB:-hng_dw67}
     ports:
       - "5432:5432"
     volumes:
@@ -111,7 +111,7 @@ services:
   # User Service (NestJS)
   user-service:
     build:
-      context: ./services/user-service
+      context: ./services/user-service/user-service
       dockerfile: Dockerfile
     container_name: notif-user-service
     ports:
@@ -119,14 +119,14 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3002
-      - DATABASE_URL=postgresql://notif_user:notif_password@postgres:5432/notification_system
+      - DATABASE_URL=postgresql://ibrahim:IobqjSBr9DzV6vSbbyNCpwpIOhwpNXyF@dpg-d494d2euk2gs73es5oog-a.frankfurt-postgres.render.com/hng_dw67
       - REDIS_HOST=redis
+    env_file:
+      - ./services/user-service/user-service/.env
     volumes:
-      - ./services/user-service:/app
+      - ./services/user-service/user-service:/app
       - /app/node_modules
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:

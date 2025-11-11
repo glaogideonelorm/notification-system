@@ -15,7 +15,7 @@
     "logs": "docker-compose logs -f",
     "gateway": "cd services/api-gateway && npm run dev",
     "email": "cd services/email-service && npm run start:dev",
-    "user": "cd services/user-service && npm run start:dev",
+    "user": "cd services/user-service/user-service && npm run start:dev",
     "push": "cd services/push-service && python main.py",
     "template": "cd services/template-service && python main.py"
   },
@@ -26,5 +26,8 @@
   "bugs": {
     "url": "https://github.com/CodeEnthusiast09/notification-system/issues"
   },
-  "homepage": "https://github.com/CodeEnthusiast09/notification-system#readme"
+  "homepage": "https://github.com/CodeEnthusiast09/notification-system#readme",
+  "dependencies": {
+    "redis-cli": "^2.1.2"
+  }
 }
