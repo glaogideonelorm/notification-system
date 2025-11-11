@@ -1,4 +1,3 @@
-// src/email/email.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as CircuitBreaker from 'opossum';
@@ -6,17 +5,18 @@ import { IEmailProvider } from './providers/email-provider.interface';
 import { SendGridProvider } from './providers/sendgrid.provider';
 import { SMTPProvider } from './providers/smtp.provider';
 import { TemplateService } from '../template/template.service';
-import { QueueMessage, EmailPayload } from '../types';
 import {
-  StatusReporterService,
-  NotificationStatus,
-} from '../common/services/status-reporter.service';
+  QueueMessage,
+  EmailPayload,
+  EmailCircuitBreakerConfig,
+} from '../types';
+import { StatusReporterService } from '../common/services/status-reporter.service';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private emailProvider: IEmailProvider;
-  private circuitBreaker: CircuitBreaker<[EmailPayload], void>;
+  private circuitBreaker: CircuitBreaker<[EmailPayload], unknown>;
 
   constructor(
     private configService: ConfigService,
@@ -42,16 +42,18 @@ export class EmailService {
   }
 
   private initializeCircuitBreaker() {
-    const config = this.configService.get('email.circuitBreaker');
+    const config = this.configService.get<EmailCircuitBreakerConfig>(
+      'email.circuitBreaker',
+    );
 
-    this.circuitBreaker = new CircuitBreaker(
-      async (payload: EmailPayload) => {
+    this.circuitBreaker = new CircuitBreaker<[EmailPayload]>(
+      async (payload) => {
         await this.emailProvider.sendEmail(payload);
       },
       {
-        timeout: config.timeout,
-        errorThresholdPercentage: config.errorThresholdPercentage,
-        resetTimeout: config.resetTimeout,
+        timeout: config?.timeout,
+        errorThresholdPercentage: config?.errorThresholdPercentage,
+        resetTimeout: config?.resetTimeout,
       },
     );
 
@@ -114,17 +116,14 @@ export class EmailService {
 
       // 5. Report success
       await this.statusReporter.reportDelivered(message.notification_id);
-    } catch (error) {
+    } catch (error: unknown) {
       const duration = Date.now() - startTime;
+      const errMsg = error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Failed to process email notification ${message.notification_id} after ${duration}ms: ${error.message}`,
+        `Failed to process email notification ${message.notification_id} after ${duration}ms: ${errMsg}`,
       );
 
-      // Report failure
-      await this.statusReporter.reportFailed(
-        message.notification_id,
-        error.message,
-      );
+      await this.statusReporter.reportFailed(message.notification_id, errMsg);
 
       throw error;
     }
@@ -133,8 +132,9 @@ export class EmailService {
   async checkHealth(): Promise<boolean> {
     try {
       return await this.emailProvider.verifyConnection();
-    } catch (error) {
-      this.logger.error(`Health check failed: ${error.message}`);
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Health check failed: ${errMsg}`);
       return false;
     }
   }

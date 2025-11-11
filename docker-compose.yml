@@ -111,7 +111,7 @@ services:
   # User Service (NestJS)
   user-service:
     build:
-      context: ./services/user-service/user-service
+      context: ./services/user-service/
       dockerfile: Dockerfile
     container_name: notif-user-service
     ports:
@@ -122,9 +122,9 @@ services:
       - DATABASE_URL=DATABASE_URL
       - REDIS_HOST=redis
     env_file:
-      - ./services/user-service/user-service/.env
+      - ./services/user-service/.env
     volumes:
-      - ./services/user-service/user-service:/app
+      - ./services/user-service:/app
       - /app/node_modules
     depends_on:
       redis:

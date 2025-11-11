@@ -57,6 +57,12 @@ export interface EmailPayload {
   };
 }
 
+export interface EmailCircuitBreakerConfig {
+  timeout: number;
+  errorThresholdPercentage: number;
+  resetTimeout: number;
+}
+
 export interface SMTPConfig {
   host: string;
   port: number;

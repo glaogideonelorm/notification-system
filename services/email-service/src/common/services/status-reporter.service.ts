@@ -48,8 +48,10 @@ export class StatusReporterService {
         `Status reported: ${update.notification_id} - ${update.status}`,
       );
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Failed to report status for ${update.notification_id}: ${error.message}`,
+        `Failed to report status for ${update.notification_id}: ${errorMessage}`,
       );
       // Don't throw - status reporting failure shouldn't stop email processing
     }
