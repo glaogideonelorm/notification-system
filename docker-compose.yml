@@ -6,9 +6,9 @@ services:
     image: postgres:15-alpine
     container_name: notif-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-ibrahim}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-IobqjSBr9DzV6vSbbyNCpwpIOhwpNXyF}
-      POSTGRES_DB: ${POSTGRES_DB:-hng_dw67}
+      POSTGRES_USER: ${POSTGRES_USER:-POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -119,7 +119,7 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3002
-      - DATABASE_URL=postgresql://ibrahim:IobqjSBr9DzV6vSbbyNCpwpIOhwpNXyF@dpg-d494d2euk2gs73es5oog-a.frankfurt-postgres.render.com/hng_dw67
+      - DATABASE_URL=DATABASE_URL
       - REDIS_HOST=redis
     env_file:
       - ./services/user-service/user-service/.env
