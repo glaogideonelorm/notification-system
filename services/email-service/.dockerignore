@@ -1,4 +1,10 @@
 node_modules
 dist
-*.log
+npm-debug.log
 .env
+.git
+.gitignore
+README.md
+.vscode
+.idea
+*.log

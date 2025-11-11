@@ -1,0 +1,20 @@
+# docker-compose.yml (for local development without other services)
+version: '3.8'
+
+services:
+  email-service:
+    build:
+      context: .
+      target: development
+    container_name: email-service
+    ports:
+      - '3001:3001'
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - RABBITMQ_HOST=host.docker.internal
+      - TEMPLATE_SERVICE_URL=http://host.docker.internal:3004
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run start:dev

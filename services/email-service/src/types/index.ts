@@ -57,6 +57,25 @@ export interface EmailPayload {
   };
 }
 
+export interface SMTPConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  auth: {
+    user: string;
+    pass: string;
+  };
+  fromEmail: string;
+  fromName: string;
+}
+
+export interface EmailSentInfo {
+  messageId: string;
+  response?: string;
+  accepted?: string[];
+  rejected?: string[];
+}
+
 export enum NotificationStatus {
   DELIVERED = 'delivered',
   PENDING = 'pending',
@@ -94,4 +113,3 @@ export interface Template {
   created_at: string;
   updated_at: string;
 }
-

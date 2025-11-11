@@ -1,0 +1,17 @@
+fastapi[standard]
+uvicorn
+aio-pika
+redis[asyncio]
+httpx
+pydantic
+python-dotenv
+circuitbreaker
+python-multipart
+google-auth
+requests
+pytest
+pytest-asyncio
+
+pytest-cov
+pytest-mock
+faker
