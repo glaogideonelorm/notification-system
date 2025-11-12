@@ -114,7 +114,7 @@ services:
       - notif-network
     command: npm run start:dev
 
-  # User Service (NestJS)
+# User Service (NestJS)
   user-service:
     build:
       context: ./services/user-service/
@@ -186,6 +186,7 @@ services:
     networks:
       - notif-network
     command: uvicorn src.main:app --host 0.0.0.0 --port 3004 --reload
+    command: python main.py
 volumes:
   postgres_data:
   redis_data:
