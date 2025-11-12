@@ -125,10 +125,8 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3002
-      - DATABASE_URL=DATABASE_URL
+      - DATABASE_URL=postgresql://notif_user:notif_password@postgres:5432/notification_system
       - REDIS_HOST=redis
-    env_file:
-      - ./services/user-service/.env
     volumes:
       - ./services/user-service:/app
       - /app/node_modules
