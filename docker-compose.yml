@@ -17,7 +17,7 @@ services:
     networks:
       - notif-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U notif_user"]
+      test: ["CMD-SHELL", "pg_isready -U notif_user -d notification_system"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,7 +40,7 @@ services:
 
   # RabbitMQ Message Queue
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: rabbitmq:3.12
     container_name: notif-rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
