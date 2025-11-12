@@ -187,7 +187,7 @@ services:
         condition: service_healthy
     networks:
       - notif-network
-    command: python main.py
+    command: uvicorn src.main:app --host 0.0.0.0 --port 3004 --reload
 volumes:
   postgres_data:
   redis_data:
