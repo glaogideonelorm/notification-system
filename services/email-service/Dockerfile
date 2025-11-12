@@ -14,22 +14,11 @@ COPY . .
 # Expose port
 EXPOSE 3001
 
-# Start in development mode
-CMD ["npm", "run", "start:dev"]
+# Build the application
+RUN npm run build
 
-# Production stage
-FROM node:20-alpine AS production
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install production dependencies only
+# Install only production dependencies
 RUN npm ci --omit=dev
-
-# Copy built application from development stage
-COPY --from=development /app/dist ./dist
 
 # Expose port
 EXPOSE 3001
