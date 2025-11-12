@@ -1,3 +1,4 @@
+# FROM node:20-alpine AS development
 FROM node:20-alpine
 
 # WORKDIR /app
@@ -65,5 +66,8 @@ COPY --from=builder /app/dist ./dist
 ENV NODE_ENV=production
 EXPOSE 3001
 
+# Run the app
+CMD ["node", "dist/main.js"]
 # Start in production mode
 CMD ["node", "dist/main"]
+
