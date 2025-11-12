@@ -8,6 +8,4 @@ python-dotenv
 alembic
 python-multipart
 pytest
-psycopg
 psycopg[binary,pool]
-psycopg2

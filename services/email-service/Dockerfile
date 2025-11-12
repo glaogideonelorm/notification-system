@@ -1,4 +1,4 @@
-# FROM node:20-alpine AS development
+FROM node:20-alpine
 
 # WORKDIR /app
 
@@ -44,7 +44,7 @@ WORKDIR /app
 
 # Copy package files and install dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 # Copy source code and build the app
 COPY . .
@@ -56,7 +56,7 @@ WORKDIR /app
 
 # Copy package.json (and package-lock.json if it exists)
 COPY package*.json ./
-RUN npm ci --only=production || npm install --only=production
+RUN npm install --omit=dev
 
 # Copy built app from builder
 COPY --from=builder /app/dist ./dist
@@ -65,5 +65,5 @@ COPY --from=builder /app/dist ./dist
 ENV NODE_ENV=production
 EXPOSE 3001
 
-# Run the app
-CMD ["node", "dist/main.js"]
+# Start in production mode
+CMD ["node", "dist/main"]

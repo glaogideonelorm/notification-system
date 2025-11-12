@@ -17,7 +17,7 @@ services:
     networks:
       - notif-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U notif_user"]
+      test: ["CMD-SHELL", "pg_isready -U notif_user -d notification_system"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,7 +40,7 @@ services:
 
   # RabbitMQ Message Queue
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: rabbitmq:3.12
     container_name: notif-rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
@@ -59,7 +59,7 @@ services:
       timeout: 10s
       retries: 5
 
-  # API Gateway (NodeJS)
+  # API Gateway (NodeJS/Fastify)
   api-gateway:
     build:
       context: ./services/api-gateway
@@ -69,21 +69,27 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - PORT=3000
+      - API_GATEWAY_PORT=3000
+      - DATABASE_URL=postgresql://notif_user:notif_password@postgres:5432/notification_system
       - RABBITMQ_HOST=rabbitmq
-      - REDIS_HOST=redis
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASSWORD=guest
       - USER_SERVICE_URL=http://user-service:3002
+      - TEMPLATE_SERVICE_URL=http://template-service:3004
+      - JWT_SECRET=HAD_12X#@
+      - SERVICE_TOKEN=internal-service-token
     volumes:
       - ./services/api-gateway:/app
       - /app/node_modules
     depends_on:
-      rabbitmq:
+      postgres:
         condition: service_healthy
-      redis:
+      rabbitmq:
         condition: service_healthy
     networks:
       - notif-network
-    command: npm run dev
+    command: npm run start:dev
 
   # Email Service (NestJS)
   email-service:
@@ -108,7 +114,7 @@ services:
       - notif-network
     command: npm run start:dev
 
-  # User Service (NestJS)
+# User Service (NestJS)
   user-service:
     build:
       context: ./services/user-service/
@@ -119,10 +125,8 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3002
-      - DATABASE_URL=DATABASE_URL
+      - DATABASE_URL=postgresql://notif_user:notif_password@postgres:5432/notification_system
       - REDIS_HOST=redis
-    env_file:
-      - ./services/user-service/.env
     volumes:
       - ./services/user-service:/app
       - /app/node_modules
@@ -132,7 +136,6 @@ services:
     networks:
       - notif-network
     command: npm run start:dev
-
   # Push Service (Python)
   push-service:
     build:
@@ -141,8 +144,14 @@ services:
     container_name: notif-push-service
     ports:
       - "3003:3003"
-    env_file:
-      - ./.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=3003
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - TEMPLATE_SERVICE_URL=http://template-service:3004
+      - REDIS_URL=redis://redis:6379
+      - FIREBASE_PROJECT_ID=notification-system-24c7a
+      - GOOGLE_APPLICATION_CREDENTIALS="ew0KICAidHlwZSI6ICJzZXJ2aWNlX2FjY291bnQiLA0KICAicHJvamVjdF9pZCI6ICJub3RpZmljYXRpb24tc3lzdGVtLTI0YzdhIiwNCiAgInByaXZhdGVfa2V5X2lkIjogIjIyNjJhZjI1NWZjMmY2ZGRjMTI0MDZhNzk3N2M4NzQxYWY3NDg2MDMiLA0KICAicHJpdmF0ZV9rZXkiOiAiLS0tLS1CRUdJTiBQU5WQVRFIEtFWS0tLS0tXG5NSUlFdlFJQkFEQU5CZ2txaGtpRzl3MEJBUUVGQUFTQ0JLY3dnZ1NqQWdFQUFvSUJBUURnZ2tmWDlzRVVwOGlwXG40SXMxZW9VbStBRnptUUJUT0QxU1YrSVhIbzdzQUszTS9DU3RiRnpPZyt5NHR3OU9nNGd1RCs2VkV5cUZzTXMrXG4yQlFab3FVVmxyQVllQk90RklNNlVORkJiK1ZxbjRMVXJiMk9XSjdHdit2aTFlVTVMb2g5bjkxZk13NzFFdXRUXG5rd29jcFBHclJMeGpEZ0hrSUpzN1pnTGl6aERhcGhwL0lIbHZYVmdOcVdaclpXQlY5QTFuKzEwU1RZN0JSczZ4XG52Qm9nc3pWWEhqcjFQUk1KQTYweG5RUlBCRzZKcWRvcVF2U0laSUtqbEkzSEo0MlQ0MTlDajZxUHFKZGpUQXdrXG5Cd2NpQWNEWkVKcDhJMnF4MytlaG90RHprTTlBcW1rWXF2UnUyMzlOR3JTNUxKMG5JVUlKd3NiTFo0Z0t4a3ZPXG5Gb0laOVJiUEFnTUJBQUVDZ2dFQUJCRm9RdG9HUXAwTnJrSlMwMnUrYU9mYWd1RTFWOHl2azhQaTVWOVk0SjdjXG5oMWZVUkU0djJsQWFwSGd3cjFBRDBpM1l1VnZKQy9ZWm9MQmlvTnBKR255S0FVOS9yOFdzNFF3ZzFvbzBBbndVXG5iMDBjbjYwc1oxYUg3Q3JMQmYrNVdtbGdwZjV6V1c1MzFDSllidzl3RDVYbHdmZTVnZ3d6TTk3VDA0OC9UKzdrXG4zcWFnczZkVkZsRk0vam83dEVDdHMyRi9hUmEwOFZOaXcxK05vam5BZ2NVdzErR3Iram5HNW9sUGZobjFQU0xjXG5DUGh1cTZtWEpkWjl3S1hwSWE1by9VSm9HRHJBNEJvRE9zbmdLREsySElhMEgycG5pWVdEbnRVRXNOWFNMN1d6XG5EWlpJUndUNWlScHgycGJCMlQ2NXprMGovOFczdnRPaXZmZzZRTjRMblFLQmdRRDZ1VGx4VUlQdFNVZThGVjdPXG55NFo3NFZIRWpqSlk4TTRvZU5uTy9tSUd6U1RFQksvdmN6NkZGWzlwcklMbm9hUlRUVnMydVVzTjZuSTRuNlQ0XG5JVEpTTUxmeUxoRWFnQkxuTWxWbXNGSC91OWZhRWxhMTFFZlRTSEFsbzdRdDlBU1h5OXNka2krZytOQzVuRllBXG5RMjRLSUVyTzRFSHo1K3ExaWxOcmorQXlCUUtCZ1FEbE85TWZWNldnVG1CT0QrbnBTTTg4WEFyNWdnaHl0VmhtXG5yYWpYRjZ1c3dYR0VnV3JJMlRFRzE3bWpUY3RLRjhCSi81N1lhWjBBQUswbFg2SWJGazZhUE1Qckh1Y2ZKRm9xXG5EWmF3NjRSYk02NklqWGpiUVM0ekdnRGRrc3ZyQlZEU283bkZqUFhvY2RQYVZsKzhDa1hORmpaNXQwRFlkeEVrXG52VnJxVTBLWnd3S0JnRlA4TWJxOGJzVFFkRUFUcElOKzk1aU5uSGRMN3ArT1luQjZNdk84a0plWXBrVW5FTXdUXG4vWkJVOGZxQU9BVmhSd3RFY1ZaK2NSN0ROdW15eUc3NXA4S1NZVHUxcExNTXpjZzJPeGMvM3VmY1EyemdFYjJzXG4welo2SUY3clhGSzhWOEdGWHV1ajZXSnhsbkZtWmdTR2tkakFnbTZUL21PMmZ3KzZ1MERmbkFrRkFvR0FOUCtQXG40RDh6Vzh6REYwazJtMmpxQU5xRzd3alJTelFDTERzYVBpQ0s0SFlZK0xtekpweVFhVFNYQnRxRmxhdklHVk93XG5OZmkxQTdza1RPKy9XdVBkYUd1RUlHZ1VwMjZRS2dqYVBpMDFmS0NHU2F2cnRVVnNtUVA2RDBCUlJSVUZpcTJ2XG4xYXl4YmZ4akxxZXBtcUFGWTFVdll4U3JPV0RONWVDaGxHdUxpbUVDZ1lFQTRRUkErQ2ZMcTUxMmNnOGNUWTVqXG40dytsVW5FdERKRnI5eDlrbG5weklEWEdHaDJ5bjBaUFJrRWJzVGNEUGV2U2xydjZVQ1kyK2xTb2M4V1lFaG5oXG45SExBYWg0STUyWGlNdU5QaStqdGV1aXloY3VLZ0gveTl4NVRtdko2YjIyYVlCSkdyeXhZSjliVmFBSkNBZTNpXG5XL2hpbTN3SjJnMkNZUHFsMW9YVUx0dz1cbi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS1cbiIsDQogICJjbGllbnRfZW1haWwiOiAiZmlyZWJhc2UtYWRtaW5zZGstZmJzdmNAbm90aWZpY2F0aW9uLXN5c3RlbS0yNGM3YS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsDQogICJjbGllbnRfaWQiOiAiMTAyNTQxMTA3Njc0ODY5Nzc5Mzc2IiwNCiAgImF1dGhfdXJpIjogImh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbS9vL29hdXRoMi9hdXRoIiwNCiAgInRva2VuX3VyaSI6ICJodHRwczovL29hdXRoMi5nb29nbGVhcGlzLmNvbS10b2tlbiIsDQogICJhdXRoX3Byb3ZpZGVyX3g1MDlfY2VydF91cmwiOiAiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vb2F1dGgyL3YxL2NlcnRzIiwNCiAgImNsaWVudF94NTA5X2NlcnRfdXJsIjogImh0dHBzOi8vd3d3Lmdvb2dsZWFwaXMuY29tL3JvYm90L3YxL21ldGFkYXRhL3g1MDkvZmlyZWJhc2UtYWRtaW5zZGstZmJzdmMlNDBub3RpZmljYXRpb24tc3lzdGVtLTI0YzdhLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwNCiAgInVuaXZlcnNlX2RvbWFpbiI6ICJnb29nbGVhcGlzLmNvbSINCn0NCg=="
     volumes:
       - ./services/push-service:/app
     depends_on:
@@ -162,8 +171,11 @@ services:
     container_name: notif-template-service
     ports:
       - "3004:3004"
-    env_file:
-      - ./.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=3004
+      - DATABASE_URL=postgresql+psycopg://notif_user:notif_password@postgres:5432/notification_system
+      - REDIS_URL=redis://redis:6379
     volumes:
       - ./services/template-service:/app
     depends_on:
@@ -173,8 +185,7 @@ services:
         condition: service_healthy
     networks:
       - notif-network
-    command: uvicorn src.main:app --host 0.0.0.0 --port 3004 --reload
-
+    command: python main.py
 volumes:
   postgres_data:
   redis_data:
