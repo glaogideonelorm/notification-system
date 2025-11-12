@@ -56,7 +56,7 @@ WORKDIR /app
 
 # Copy package.json (and package-lock.json if it exists)
 COPY package*.json ./
-RUN npm ci --only=production || npm install --only=production
+RUN npm ci --omit=dev || npm install --omit=dev
 
 # Copy built app from builder
 COPY --from=builder /app/dist ./dist
