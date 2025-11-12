@@ -28,7 +28,7 @@ const createResponse = (data: any, message: string, success = true) => ({
   },
 });
 
-@Controller('api/users')
+@Controller('api/v1/users')
 @UsePipes(new ValidationPipe({ transform: true }))
 export class UserController {
   constructor(private readonly userService: UserService) {}
