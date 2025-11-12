@@ -1,0 +1,24 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Notification {
+  id               String   @id @default(uuid())
+  request_id       String   @unique
+  user_id          String
+  notification_type String
+  status           String   @default("pending")
+  priority         Int      @default(1)
+  error            String?
+  metadata         String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+}
