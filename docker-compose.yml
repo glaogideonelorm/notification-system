@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # PostgreSQL Database
@@ -46,7 +46,7 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
     ports:
-      - "5672:5672"   # AMQP port
+      - "5672:5672" # AMQP port
       - "15672:15672" # Management UI
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
@@ -186,6 +186,7 @@ services:
     networks:
       - notif-network
     command: uvicorn src.main:app --host 0.0.0.0 --port 3004 --reload
+    command: python main.py
 volumes:
   postgres_data:
   redis_data:
