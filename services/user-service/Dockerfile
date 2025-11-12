@@ -35,5 +35,8 @@ COPY --from=builder /app/node_modules ./node_modules
 # Expose the port
 EXPOSE 3002
 
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3002/api/users/health || exit 1
+
 # Start the app
 CMD ["node", "dist/main"]

@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { URL } from 'url';
+import { randomUUID } from 'crypto';
+(global as any).crypto = { randomUUID };
 
 @Module({
   imports: [
@@ -35,9 +37,9 @@ import { URL } from 'url';
           autoLoadEntities: true,
           synchronize: true, 
           // IMPORTANT: SSL required for cloud DBs like Render
-          ssl: {
-            rejectUnauthorized: false,
-          },
+          // ssl: {
+          //   rejectUnauthorized: false,
+          // },
         };
       },
     }),
