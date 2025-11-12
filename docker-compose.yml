@@ -75,7 +75,9 @@ services:
       - RABBITMQ_PASSWORD=guest
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
       - USER_SERVICE_URL=http://user-service:3002
+      - USER_SERVICE_BASE_URL=http://user-service:3002
       - TEMPLATE_SERVICE_URL=http://template-service:3004
+      - TEMPLATE_SERVICE_BASE_URL=http://template-service:3004
       - JWT_SECRET=HAD_12X#@
       - SERVICE_TOKEN=internal-service-token
     volumes:
@@ -87,9 +89,9 @@ services:
         condition: service_healthy
     networks:
       - notif-network
-    command: npm run start
+    command: sh -c "npx prisma migrate deploy 2>/dev/null; npx prisma db push --accept-data-loss && npm run start"
 
-# Email Service (NestJS)
+  # Email Service (NestJS)
   email-service:
     build:
       context: ./services/email-service
@@ -127,7 +129,7 @@ services:
       - notif-network
     command: npm run start:dev
 
-# User Service (NestJS)
+  # User Service (NestJS)
   user-service:
     build:
       context: ./services/user-service/

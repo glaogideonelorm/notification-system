@@ -22,6 +22,9 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
+# Note: Database migrations will run at container startupThis ensures tables are created/updated when the container starts
+
+
 # Install only production dependencies
 RUN npm install --omit=dev
 
