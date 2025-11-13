@@ -14,10 +14,10 @@ export interface TemplateServiceClient {
 
 export class HttpTemplateServiceClient implements TemplateServiceClient {
   async ensureTemplateExists(templateCode: string): Promise<void> {
-    if (!env.TEMPLATE_SERVICE_BASE_URL) return; // optional validation
+    if (!env.TEMPLATE_SERVICE_URL) return; // optional validation
 
     const res = await fetch(
-      `${env.TEMPLATE_SERVICE_BASE_URL}/api/v1/templates/${templateCode}`,
+      `${env.TEMPLATE_SERVICE_URL}/api/v1/templates/${templateCode}`,
     );
 
     if (res.status === 404) {

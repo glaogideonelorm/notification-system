@@ -5,6 +5,7 @@ export default registerAs('rabbitmq', () => ({
   port: parseInt(process.env.RABBITMQ_PORT!),
   username: process.env.RABBITMQ_USER || 'guest',
   password: process.env.RABBITMQ_PASSWORD || 'guest',
+  url: process.env.RABBITMQ_URL,
   emailQueue: process.env.RABBITMQ_EMAIL_QUEUE || 'email.queue',
   failedQueue: process.env.RABBITMQ_FAILED_QUEUE || 'failed.queue',
 }));

@@ -67,6 +67,7 @@ export interface RabbitMQConfig {
   username: string;
   password: string;
   host: string;
+  url: string;
   port: number;
   emailQueue: string;
   failedQueue: string;

@@ -13,9 +13,9 @@ const envSchema = z.object({
 
   RABBITMQ_URL: z.string().url(),
 
-  USER_SERVICE_BASE_URL: z.string().url().optional(),
+  USER_SERVICE_URL: z.string().url().optional(),
 
-  TEMPLATE_SERVICE_BASE_URL: z.string().url().optional(),
+  TEMPLATE_SERVICE_URL: z.string().url().optional(),
 
   INTERNAL_SERVICE_TOKEN: z.string().min(1).optional(),
 

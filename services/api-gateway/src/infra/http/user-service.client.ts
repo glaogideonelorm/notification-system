@@ -7,11 +7,26 @@ export interface UserPreferences {
 }
 
 export interface UserServiceUser {
-  id: string;
+  user_id: string;
   name: string;
   email: string;
   push_token?: string | null;
   preferences: UserPreferences;
+}
+
+interface UserServiceResponse {
+  success: boolean;
+  message: string;
+  data: UserServiceUser;
+  error: null | string;
+  meta: {
+    total: number;
+    limit: number;
+    page: number;
+    total_pages: number;
+    has_next: boolean;
+    has_previous: boolean;
+  };
 }
 
 export interface UserServiceClient {
@@ -20,12 +35,12 @@ export interface UserServiceClient {
 
 export class HttpUserServiceClient implements UserServiceClient {
   async getUserById(userId: string): Promise<UserServiceUser> {
-    if (!env.USER_SERVICE_BASE_URL) {
+    if (!env.USER_SERVICE_URL) {
       throw new ServiceUnavailableError("User service not configured");
     }
 
     const res = await fetch(
-      `${env.USER_SERVICE_BASE_URL}/api/v1/users/${userId}`,
+      `${env.USER_SERVICE_URL}/api/v1/users/${userId}`,
     );
 
     if (res.status === 404) {
@@ -36,6 +51,17 @@ export class HttpUserServiceClient implements UserServiceClient {
       throw new ServiceUnavailableError("User service error");
     }
 
-    return (await res.json()) as UserServiceUser;
+    if (!res.ok) {
+      throw new ServiceUnavailableError("User service error");
+    }
+
+    // Parse the wrapped response and extract the data
+    const response = (await res.json()) as UserServiceResponse;
+    
+    if (!response.success) {
+      throw new ServiceUnavailableError(response.error || "User service error");
+    }
+
+    return response.data;
   }
 }

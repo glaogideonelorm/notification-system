@@ -1,15 +1,26 @@
-import { IsBoolean, IsOptional, IsObject } from 'class-validator';
+import {
+  IsBoolean,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class UserPreferenceDto {
+  @IsBoolean()
+  email: boolean;
+
+  @IsBoolean()
+  push: boolean;
+}
 
 export class UpdatePrefsDto {
   @IsOptional()
-  @IsBoolean()
-  email_notifications_enabled?: boolean;
+  @ValidateNested()
+  @Type(() => UserPreferenceDto)
+  preferences?: UserPreferenceDto;
 
   @IsOptional()
-  @IsBoolean()
-  push_notifications_enabled?: boolean;
-
-  @IsOptional()
-  @IsObject()
-  push_token?: Record<string, any> | null;
+  @IsString()
+  push_token?: string | null;
 }

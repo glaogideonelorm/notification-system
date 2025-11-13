@@ -38,7 +38,7 @@ services:
 
   # RabbitMQ Message Queue
   rabbitmq:
-    image: rabbitmq:3.12
+    image: rabbitmq:3.12-management
     container_name: notif-rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
@@ -75,7 +75,9 @@ services:
       - RABBITMQ_PASSWORD=guest
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
       - USER_SERVICE_URL=http://user-service:3002
+      - USER_SERVICE_BASE_URL=http://user-service:3002
       - TEMPLATE_SERVICE_URL=http://template-service:3004
+      - TEMPLATE_SERVICE_BASE_URL=http://template-service:3004
       - JWT_SECRET=HAD_12X#@
       - SERVICE_TOKEN=internal-service-token
     volumes:
@@ -87,9 +89,9 @@ services:
         condition: service_healthy
     networks:
       - notif-network
-    command: npm run start
+    command: sh -c "npx prisma migrate deploy 2>/dev/null; npx prisma db push --accept-data-loss && npm run start"
 
-# Email Service (NestJS)
+  # Email Service (NestJS)
   email-service:
     build:
       context: ./services/email-service
@@ -106,15 +108,21 @@ services:
       RABBITMQ_PASSWORD: guest
       RABBITMQ_EMAIL_QUEUE: email.queue
       RABBITMQ_FAILED_QUEUE: failed.queue
-      EMAIL_PROVIDER: sendgrid
-      SENDGRID_API_KEY: SG.BNveDFG1SLagR_qvi1DaWg.           YT2FM8OkRdRCgmf6jRT4f7G8e5T6-f8XswIQBLc3RBo
+      EMAIL_PROVIDER: smtp
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
       SENDGRID_FROM_EMAIL: obrienadedapo15@gmail.com
       SENDGRID_FROM_NAME: "Group 43 Notification System"
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: obrienadedapo15@gmail.com
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_EMAIL: obrienadedapo15@gmail.com
+      SMTP_FROM_NAME: "Group 43 Notification System"
       TEMPLATE_SERVICE_URL: http://template-service:3004
       API_GATEWAY_URL: http://api-gateway:3000
       MAX_RETRIES: 5
       RETRY_DELAY_MS: 1000
-      CIRCUIT_BREAKER_TIMEOUT: 3000
+      CIRCUIT_BREAKER_TIMEOUT: 10000
       CIRCUIT_BREAKER_ERROR_THRESHOLD: 50
       CIRCUIT_BREAKER_RESET_TIMEOUT: 30000
     volumes:
@@ -127,7 +135,7 @@ services:
       - notif-network
     command: npm run start:dev
 
-# User Service (NestJS)
+  # User Service (NestJS)
   user-service:
     build:
       context: ./services/user-service/

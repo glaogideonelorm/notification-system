@@ -21,11 +21,11 @@ export class RabbitMQPublisher implements QueuePublisher {
 
     await this.channel.assertExchange(EXCHANGE, "direct", { durable: true });
 
-    await this.channel.assertQueue("email.queue", { durable: true });
-    await this.channel.assertQueue("push.queue", { durable: true });
+    // await this.channel.assertQueue("email.queue", { durable: true });
+    // await this.channel.assertQueue("push.queue", { durable: true });
 
-    await this.channel.bindQueue("email.queue", EXCHANGE, "email");
-    await this.channel.bindQueue("push.queue", EXCHANGE, "push");
+    // await this.channel.bindQueue("email.queue", EXCHANGE, "email");
+    // await this.channel.bindQueue("push.queue", EXCHANGE, "push");
 
     logger.info("RabbitMQ connected and queues bound");
   }

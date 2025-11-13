@@ -9,7 +9,7 @@ import { randomUUID } from 'crypto';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, 
+      isGlobal: true,
     }),
 
     TypeOrmModule.forRootAsync({
@@ -17,25 +17,29 @@ import { randomUUID } from 'crypto';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const databaseUrl = config.get<string>('DATABASE_URL');
-        
-        console.log(`[DB Config Check] Value read for DATABASE_URL: ${databaseUrl}`);
 
-        if (!databaseUrl || databaseUrl === 'undefined') { 
-          throw new Error('DATABASE_URL environment variable is missing or invalid.');
+        console.log(
+          `[DB Config Check] Value read for DATABASE_URL: ${databaseUrl}`,
+        );
+
+        if (!databaseUrl || databaseUrl === 'undefined') {
+          throw new Error(
+            'DATABASE_URL environment variable is missing or invalid.',
+          );
         }
         const url = new URL(databaseUrl);
-        
-        const port = parseInt(url.port) || 5432; 
+
+        const port = parseInt(url.port) || 5432;
 
         return {
           type: 'postgres',
-          host: url.hostname,         
+          host: url.hostname,
           port: port,
-          username: url.username,     
-          password: url.password,     
+          username: url.username,
+          password: url.password,
           database: url.pathname.slice(1),
           autoLoadEntities: true,
-          synchronize: true, 
+          synchronize: true,
           // IMPORTANT: SSL required for cloud DBs like Render
           // ssl: {
           //   rejectUnauthorized: false,
@@ -43,7 +47,7 @@ import { randomUUID } from 'crypto';
         };
       },
     }),
-    
+
     UserModule,
   ],
 })
