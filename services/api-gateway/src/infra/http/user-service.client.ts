@@ -35,12 +35,12 @@ export interface UserServiceClient {
 
 export class HttpUserServiceClient implements UserServiceClient {
   async getUserById(userId: string): Promise<UserServiceUser> {
-    if (!env.USER_SERVICE_BASE_URL) {
+    if (!env.USER_SERVICE_URL) {
       throw new ServiceUnavailableError("User service not configured");
     }
 
     const res = await fetch(
-      `${env.USER_SERVICE_BASE_URL}/api/v1/users/${userId}`,
+      `${env.USER_SERVICE_URL}/api/v1/users/${userId}`,
     );
 
     if (res.status === 404) {
