@@ -24,40 +24,21 @@ logger = logging.getLogger(__name__)
 
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+
 REDIS_URL = os.getenv("REDIS_URL")
 
 from urllib.parse import urlparse
-
-
-async def create_db_if_not_exists(database_url: str):
-    parsed = urlparse(database_url)
-    db_name = parsed.path.lstrip("/")
-    user = parsed.username
-    password = parsed.password
-    host = parsed.hostname
-    port = parsed.port or 5432
-
-    conn = await asyncpg.connect(
-        user=user, password=password, database="postgres", host=host, port=port
-    )
-    try:
-        exists = await conn.fetchval(
-            "SELECT 1 FROM pg_database WHERE datname = $1", db_name
-        )
-        if not exists:
-
-            await conn.execute(f'CREATE DATABASE "{db_name}"')
-    finally:
-        await conn.close()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
 
-        await create_db_if_not_exists(DATABASE_URL)
-
-        state.engine = create_async_engine(DATABASE_URL, echo=False)
+        state.engine = create_async_engine(DATABASE_URL, echo=False, pool_pre_ping=True,)
         state.async_session = async_sessionmaker(
             state.engine, class_=AsyncSession, expire_on_commit=False
         )
