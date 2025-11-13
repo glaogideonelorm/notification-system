@@ -1,24 +1,34 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
+
+export interface UserPreference {
+  email: boolean;
+  push: boolean;
+}
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   user_id: string;
 
+  @Column()
+  name: string;
+
   @Column({ unique: true })
   email: string;
 
-  @Column({ select: false }) 
-  password_hash: string; 
+  @Column({ select: false })
+  password_hash: string;
 
-  @Column({ type:'jsonb',nullable: true, name: 'push_token' })
-  push_token: Record<string, any> | null; 
+  @Column({ type: 'varchar', nullable: true })
+  push_token: string | null;
 
-  @Column({ default: true, name: 'email_notifications_enabled' })
-  email_notifications_enabled: boolean; 
-
-  @Column({ default: true, name: 'push_notifications_enabled' })
-  push_notifications_enabled: boolean; 
+  @Column({ type: 'jsonb' })
+  preferences: UserPreference;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;

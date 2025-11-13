@@ -4,15 +4,19 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { EmailTemplate, ApiResponse, UserData } from '../types';
 
+// Updated interface to match actual template-service response
+interface TemplateData {
+  subject: string;
+  body: string;
+  title: string;
+  variables: string[];
+}
+
 interface TemplateResponse {
-  id: string;
-  name: string;
-  templates: {
-    [language: string]: {
-      subject: string;
-      body: string;
-    };
-  };
+  success: boolean;
+  data: TemplateData;
+  message: string;
+  meta: null;
 }
 
 @Injectable()
@@ -35,25 +39,36 @@ export class TemplateService {
     language: string,
   ): Promise<EmailTemplate> {
     try {
-      const url = `${this.templateServiceUrl}/api/templates/${templateCode}?language=${language}`;
+      const url = `${this.templateServiceUrl}/api/v1/templates/${templateCode}?language=${language}`;
 
       this.logger.log(
         `Fetching template ${templateCode} for language ${language}`,
       );
 
       const response = await firstValueFrom(
-        this.httpService.get<ApiResponse<TemplateResponse>>(url),
+        this.httpService.get<TemplateResponse>(url),
       );
 
-      const templateData = response.data.data;
-      const template =
-        templateData?.templates[language] || templateData?.templates['en'];
+      const apiResponse = response.data;
 
-      if (!template) {
+      // Check if the request was successful
+      if (!apiResponse.success) {
+        throw new Error(
+          `Template service returned error for code ${templateCode}`,
+        );
+      }
+
+      const templateData = apiResponse.data;
+
+      if (!templateData || !templateData.subject || !templateData.body) {
         throw new Error(`Template not found for code ${templateCode}`);
       }
 
-      return template;
+      // Return the template with subject and body
+      return {
+        subject: templateData.subject,
+        body: templateData.body,
+      };
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to fetch template: ${errMsg}`);

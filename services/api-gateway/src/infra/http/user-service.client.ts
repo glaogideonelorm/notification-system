@@ -7,11 +7,26 @@ export interface UserPreferences {
 }
 
 export interface UserServiceUser {
-  id: string;
+  user_id: string;
   name: string;
   email: string;
   push_token?: string | null;
   preferences: UserPreferences;
+}
+
+interface UserServiceResponse {
+  success: boolean;
+  message: string;
+  data: UserServiceUser;
+  error: null | string;
+  meta: {
+    total: number;
+    limit: number;
+    page: number;
+    total_pages: number;
+    has_next: boolean;
+    has_previous: boolean;
+  };
 }
 
 export interface UserServiceClient {
@@ -36,6 +51,17 @@ export class HttpUserServiceClient implements UserServiceClient {
       throw new ServiceUnavailableError("User service error");
     }
 
-    return (await res.json()) as UserServiceUser;
+    if (!res.ok) {
+      throw new ServiceUnavailableError("User service error");
+    }
+
+    // Parse the wrapped response and extract the data
+    const response = (await res.json()) as UserServiceResponse;
+    
+    if (!response.success) {
+      throw new ServiceUnavailableError(response.error || "User service error");
+    }
+
+    return response.data;
   }
 }
