@@ -3,78 +3,77 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import select
-from datetime import datetime, timezone
+from datetime import datetime
 import logging
 from redis import asyncio as aioredis
 from dotenv import load_dotenv
 from urllib.parse import urlparse
-import asyncpg
-import os
+from datetime import datetime, timezone
 
+import os
 from src.schemas import HealthResponse
 from src.models import Base
 from src.services import state
 from src.routers import router
+import asyncpg
 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 REDIS_URL = os.getenv("REDIS_URL")
 
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is not set")
+from urllib.parse import urlparse
+
+
+async def create_db_if_not_exists(database_url: str):
+    parsed = urlparse(database_url)
+    db_name = parsed.path.lstrip("/")
+    user = parsed.username
+    password = parsed.password
+    host = parsed.hostname
+    port = parsed.port or 5432
+
+    conn = await asyncpg.connect(
+        user=user, password=password, database="postgres", host=host, port=port
+    )
+    try:
+        exists = await conn.fetchval(
+            "SELECT 1 FROM pg_database WHERE datname = $1", db_name
+        )
+        if not exists:
+
+            await conn.execute(f'CREATE DATABASE "{db_name}"')
+    finally:
+        await conn.close()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        # Ensure DB exists
-        parsed = urlparse(DATABASE_URL)
-        db_name = parsed.path.lstrip("/")
-        user = parsed.username
-        password = parsed.password
-        host = parsed.hostname
-        port = parsed.port or 5432
 
-        conn = await asyncpg.connect(
-            user=user, password=password, database="postgres", host=host, port=port
-        )
-        try:
-            exists = await conn.fetchval(
-                "SELECT 1 FROM pg_database WHERE datname = $1", db_name
-            )
-            if not exists:
-                await conn.execute(f'CREATE DATABASE "{db_name}"')
-        finally:
-            await conn.close()
+        await create_db_if_not_exists(DATABASE_URL)
 
-        # Initialize SQLAlchemy async engine
         state.engine = create_async_engine(DATABASE_URL, echo=False)
         state.async_session = async_sessionmaker(
             state.engine, class_=AsyncSession, expire_on_commit=False
         )
 
-        # Create tables
         async with state.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
-        # Initialize Redis
-        if REDIS_URL:
-            state.redis_client = await aioredis.from_url(REDIS_URL, decode_responses=True)
-        else:
-            logger.warning("REDIS_URL not set; Redis client not initialized")
-            state.redis_client = None
-
+        state.redis_client = await aioredis.from_url(REDIS_URL, decode_responses=True)
         logger.info("Template Service started successfully")
+
     except Exception as e:
         logger.error(f"Failed to start Template Service: {e}")
         raise
 
     yield
 
-    # Shutdown
     if state.engine:
         await state.engine.dispose()
     if state.redis_client:
@@ -108,7 +107,7 @@ async def health_check():
         async with state.async_session() as session:
             await session.execute(select(1))
             db_connected = True
-    except Exception:
+    except:
         pass
 
     return HealthResponse(

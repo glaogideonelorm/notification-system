@@ -8,6 +8,7 @@ python-dotenv
 alembic
 python-multipart
 pytest
-
-# Optional synchronous driver if needed
+psycopg[binary]
 psycopg2-binary
+psycopg2
+psycopg
