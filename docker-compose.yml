@@ -108,15 +108,21 @@ services:
       RABBITMQ_PASSWORD: guest
       RABBITMQ_EMAIL_QUEUE: email.queue
       RABBITMQ_FAILED_QUEUE: failed.queue
-      EMAIL_PROVIDER: sendgrid
+      EMAIL_PROVIDER: smtp
       SENDGRID_API_KEY: ${SENDGRID_API_KEY}
       SENDGRID_FROM_EMAIL: obrienadedapo15@gmail.com
       SENDGRID_FROM_NAME: "Group 43 Notification System"
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: obrienadedapo15@gmail.com
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_EMAIL: obrienadedapo15@gmail.com
+      SMTP_FROM_NAME: "Group 43 Notification System"
       TEMPLATE_SERVICE_URL: http://template-service:3004
       API_GATEWAY_URL: http://api-gateway:3000
       MAX_RETRIES: 5
       RETRY_DELAY_MS: 1000
-      CIRCUIT_BREAKER_TIMEOUT: 3000
+      CIRCUIT_BREAKER_TIMEOUT: 10000
       CIRCUIT_BREAKER_ERROR_THRESHOLD: 50
       CIRCUIT_BREAKER_RESET_TIMEOUT: 30000
     volumes:
