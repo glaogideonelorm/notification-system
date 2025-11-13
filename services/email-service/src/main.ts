@@ -28,11 +28,8 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
 
   logger.log(`Email Service is running on: http://localhost:${port}`);
-  logger.log(`Email Provider: ${process.env.EMAIL_PROVIDER || 'sendgrid'}`);
-  logger.log(
-    `RabbitMQ: ${process.env.RABBITMQ_HOST || 'localhost'}:${process.env.RABBITMQ_PORT || 5672}`,
-  );
-  logger.log(`Health Check: http://localhost:${port}/health`);
+  logger.log(`Email Provider: ${process.env.EMAIL_PROVIDER}`);
+  logger.log(`Health Check: http://localhost:${port}/api/v1/health`);
 }
 bootstrap().catch((error) => {
   console.error('Unhandled error in bootstrap:', error);
