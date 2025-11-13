@@ -34,15 +34,15 @@ export const validationSchema = Joi.object({
   SMTP_FROM_NAME: Joi.string().allow('', null),
 
   // Template Service
-  TEMPLATE_SERVICE_URL: Joi.string().uri().default('http://localhost:3004'),
+  TEMPLATE_SERVICE_URL: Joi.string().required(),
 
   // API Gateway Service
-  API_GATEWAY_URL: Joi.string().uri().default('http://localhost:3000'),
+  API_GATEWAY_URL: Joi.string().required(),
 
   // Retry / Circuit Breaker
   MAX_RETRIES: Joi.number().default(5),
   RETRY_DELAY_MS: Joi.number().default(1000),
-  CIRCUIT_BREAKER_TIMEOUT: Joi.number().default(3000),
+  CIRCUIT_BREAKER_TIMEOUT: Joi.number().default(10000),
   CIRCUIT_BREAKER_ERROR_THRESHOLD: Joi.number().default(50),
   CIRCUIT_BREAKER_RESET_TIMEOUT: Joi.number().default(30000),
 });
