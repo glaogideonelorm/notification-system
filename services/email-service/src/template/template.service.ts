@@ -4,12 +4,19 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { EmailTemplate, ApiResponse, UserData } from '../types';
 
-// Updated interface to match actual template-service response
-interface TemplateData {
+// Updated interface to match new template-service response
+interface LanguageTemplate {
   subject: string;
   body: string;
   title: string;
-  variables: string[];
+}
+
+interface TemplateData {
+  id: string;
+  name: string;
+  templates: {
+    [languageCode: string]: LanguageTemplate;
+  };
 }
 
 interface TemplateResponse {
@@ -36,14 +43,16 @@ export class TemplateService {
 
   async getTemplate(
     templateCode: string,
-    language: string,
+    language?: string,
   ): Promise<EmailTemplate> {
-    try {
-      const url = `${this.templateServiceUrl}/api/v1/templates/${templateCode}?language=${language}`;
+    // Default to 'en' if language is not provided
+    const lang = language || 'en';
 
-      this.logger.log(
-        `Fetching template ${templateCode} for language ${language}`,
-      );
+    try {
+      // Don't add language query param since backend returns all languages anyway
+      const url = `${this.templateServiceUrl}/api/v1/templates/${templateCode}`;
+
+      this.logger.log(`Fetching template ${templateCode} for language ${lang}`);
 
       const response = await firstValueFrom(
         this.httpService.get<TemplateResponse>(url),
@@ -60,14 +69,31 @@ export class TemplateService {
 
       const templateData = apiResponse.data;
 
-      if (!templateData || !templateData.subject || !templateData.body) {
+      if (!templateData || !templateData.templates) {
         throw new Error(`Template not found for code ${templateCode}`);
+      }
+
+      // Get the language-specific template
+      const languageTemplate = templateData.templates[lang];
+
+      if (
+        !languageTemplate ||
+        !languageTemplate.subject ||
+        !languageTemplate.body
+      ) {
+        // Try to get available languages for better error message
+        const availableLanguages = Object.keys(templateData.templates).join(
+          ', ',
+        );
+        throw new Error(
+          `Template not found for code ${templateCode} and language ${lang}. Available languages: ${availableLanguages}`,
+        );
       }
 
       // Return the template with subject and body
       return {
-        subject: templateData.subject,
-        body: templateData.body,
+        subject: languageTemplate.subject,
+        body: languageTemplate.body,
       };
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : String(error);

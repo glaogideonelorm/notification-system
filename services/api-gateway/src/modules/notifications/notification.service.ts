@@ -61,7 +61,8 @@ export class NotificationService {
       request_id: notification.request_id,
       notification_type: notification.notification_type,
       user_id: notification.user_id,
-      email: user.email,
+      email: user.user_email,
+      language: req.language ?? 'en',
       push_token: user.push_token ?? null,
       template_code: req.template_code,
       variables: req.variables,
@@ -69,7 +70,6 @@ export class NotificationService {
       metadata: notification.metadata,
       created_at: notification.created_at.toISOString(),
     };
-
     
     try {
       if (req.notification_type === "email") {

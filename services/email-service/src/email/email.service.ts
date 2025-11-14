@@ -75,6 +75,9 @@ export class EmailService {
 
   async processEmailNotification(message: QueueMessage): Promise<void> {
     const startTime = Date.now();
+
+    console.log({ message });
+
     this.logger.log(
       `Processing email notification ${message.notification_id} for user ${message.user_id}`,
     );
@@ -101,7 +104,7 @@ export class EmailService {
 
       // 3. Prepare email payload
       const emailPayload: EmailPayload = {
-        to: message.user_email,
+        to: message.email,
         subject,
         html: body,
       };
@@ -111,7 +114,7 @@ export class EmailService {
 
       const duration = Date.now() - startTime;
       this.logger.log(
-        `Email sent successfully to ${message.user_email} in ${duration}ms`,
+        `Email sent successfully to ${message.email} in ${duration}ms`,
       );
 
       // 5. Report success

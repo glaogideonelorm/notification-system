@@ -191,3 +191,61 @@ class TemplateRepository:
             )
         )
         return result.scalar_one_or_none()
+
+    @staticmethod
+    async def get_template_response_dict(template: Template) -> dict:
+        """Convert template model to TypeScript-compatible format"""
+        return {
+            "id": str(template.id),  # Convert to string to match TypeScript interface
+            "name": template.name,
+            "templates": {
+                template.language: {
+                    "subject": template.subject,
+                    "body": template.body,
+                    "title": template.title,
+                }
+            },
+        }
+
+    @staticmethod
+    async def get_all_language_versions(
+        db: AsyncSession, template_code: str
+    ) -> List[Template]:
+        """Get all active language versions of a template"""
+        result = await db.execute(
+            select(Template).where(
+                Template.template_code == template_code,
+                Template.is_active == True,
+            )
+        )
+        return result.scalars().all()
+
+    @staticmethod
+    async def get_template_with_all_languages(
+        db: AsyncSession, template_code: str
+    ) -> dict:
+        """Get template with all language versions in TypeScript format"""
+        templates = await TemplateRepository.get_all_language_versions(
+            db, template_code
+        )
+
+        if not templates:
+            return None
+
+        # Use the first template for metadata
+        base_template = templates[0]
+
+        # Build templates dict with all languages
+        language_templates = {}
+        for template in templates:
+            language_templates[template.language] = {
+                "subject": template.subject,
+                "body": template.body,
+                "title": template.title,
+            }
+
+        return {
+            "id": str(base_template.id),
+            "name": base_template.name,
+            "templates": language_templates,
+        }

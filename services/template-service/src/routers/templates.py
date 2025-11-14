@@ -90,10 +90,12 @@ async def get_template(
     db: AsyncSession = Depends(get_db),
     cache: CacheService = Depends(get_cache_service),
 ):
-    """Get a template by code"""
+    """Get a template by code with all language versions"""
     try:
-        # Try cache first
-        cached_data = await cache.get_template(template_code, language)
+        # Try cache first (cache key should include "all_languages")
+        cache_key = f"{template_code}_all_languages"
+        cached_data = await cache.get_template(cache_key, "all")
+
         if cached_data:
             return {
                 "success": True,
@@ -102,24 +104,20 @@ async def get_template(
                 "meta": None,
             }
 
-        # Query database if not in cache
-        template = await TemplateRepository.get_by_template_code_and_language(
-            db, template_code, language
+        # Query database for all language versions
+        template_data = await TemplateRepository.get_template_with_all_languages(
+            db, template_code
         )
 
-        if not template:
+        if not template_data:
             raise HTTPException(status_code=404, detail="Template not found")
 
-        # Prepare response data
-        data = await TemplateRepository.get_template_data_dict(template)
-
         # Cache the result
-        cache_data = await TemplateRepository.get_template_cache_dict(template)
-        await cache.set_template(template_code, language, cache_data)
+        await cache.set_template(cache_key, "all", template_data)
 
         return {
             "success": True,
-            "data": data,
+            "data": template_data,
             "message": "Template retrieved successfully",
             "meta": None,
         }
