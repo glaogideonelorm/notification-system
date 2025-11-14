@@ -56,6 +56,7 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
     this.connection = amqp.connect([url], {
       heartbeatIntervalInSeconds: 30,
       reconnectTimeInSeconds: 5,
+      connectionOptions: { rejectUnauthorized: false },
     });
 
     this.connection.on('connect', () => {
@@ -106,12 +107,19 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  // rabbitmq.service.ts (email-service)
+
   private async setupQueues(channel: ConfirmChannel) {
     const config = this.configService.get<RabbitMQConfig>('rabbitmq');
 
     if (!config) {
       throw new Error('Rabbit MQ configuration not found');
     }
+
+    // Declare the exchange that api-gateway uses
+    await channel.assertExchange('notifications.direct', 'direct', {
+      durable: true,
+    });
 
     // Declare dead letter exchange
     await channel.assertExchange('failed', 'direct', { durable: true });
@@ -128,6 +136,9 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
         'x-dead-letter-routing-key': 'failed',
       },
     });
+
+    // Bind email queue to the notifications exchange with 'email' routing key
+    await channel.bindQueue(config.emailQueue, 'notifications.direct', 'email');
 
     this.logger.log('Queues and exchanges set up successfully');
   }
