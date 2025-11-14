@@ -100,31 +100,33 @@ services:
     ports:
       - "3001:3001"
     environment:
-      NODE_ENV: development
-      PORT: 3001
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USER: guest
-      RABBITMQ_PASSWORD: guest
-      RABBITMQ_EMAIL_QUEUE: email.queue
-      RABBITMQ_FAILED_QUEUE: failed.queue
-      EMAIL_PROVIDER: smtp
-      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
-      SENDGRID_FROM_EMAIL: obrienadedapo15@gmail.com
-      SENDGRID_FROM_NAME: "Group 43 Notification System"
-      SMTP_HOST: smtp.gmail.com
-      SMTP_PORT: 587
-      SMTP_USER: obrienadedapo15@gmail.com
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_FROM_EMAIL: obrienadedapo15@gmail.com
-      SMTP_FROM_NAME: "Group 43 Notification System"
-      TEMPLATE_SERVICE_URL: http://template-service:3004
-      API_GATEWAY_URL: http://api-gateway:3000
-      MAX_RETRIES: 5
-      RETRY_DELAY_MS: 1000
-      CIRCUIT_BREAKER_TIMEOUT: 10000
-      CIRCUIT_BREAKER_ERROR_THRESHOLD: 50
-      CIRCUIT_BREAKER_RESET_TIMEOUT: 30000
+      - NODE_ENV=development
+      - PORT=3001
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - RABBITMQ_EMAIL_QUEUE=email.queue
+      - RABBITMQ_FAILED_QUEUE=failed.queue
+      - EMAIL_PROVIDER=smtp
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - SENDGRID_FROM_EMAIL=obrienadedapo15@gmail.com
+      - SENDGRID_FROM_NAME="Group 43 Notification System"
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=465
+      - SMTP_SECURE=true
+      - SMTP_USER=obrienadedapo15@gmail.com
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_FROM_EMAIL=obrienadedapo15@gmail.com
+      - SMTP_FROM_NAME="Group 43 Notification System"
+      - TEMPLATE_SERVICE_URL=http://template-service:3004
+      - API_GATEWAY_URL=http://api-gateway:3000
+      - MAX_RETRIES=5
+      - RETRY_DELAY_MS=1000
+      - CIRCUIT_BREAKER_TIMEOUT=10000
+      - CIRCUIT_BREAKER_ERROR_THRESHOLD=50
+      - CIRCUIT_BREAKER_RESET_TIMEOUT=30000
     volumes:
       - ./services/email-service:/app
       - /app/node_modules

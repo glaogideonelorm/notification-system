@@ -30,7 +30,7 @@ export interface QueueMessage {
   notification_id: string;
   notification_type: NotificationType;
   user_id: string;
-  user_email: string;
+  email: string;
   template_code: string;
   language: string;
   variables: UserData;

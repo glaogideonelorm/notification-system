@@ -18,6 +18,7 @@ export const notificationRequestSchema = z.object({
   notification_type: notificationTypeSchema,
   user_id: z.string().uuid(),
   template_code: z.string().min(1),
+  language: z.string(),
   variables: userDataSchema,
   request_id: z.string().min(1),
   priority: z.number().int().min(0),

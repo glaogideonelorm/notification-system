@@ -21,8 +21,19 @@ class TemplateUpdate(BaseModel):
     body: Optional[str] = None
     title: Optional[str] = None
     variables: Optional[List[str]] = None
-    # is_active: Optional[bool] = None
     language: Optional[str] = None
+
+
+class TemplateLanguageData(BaseModel):
+    subject: Optional[str]
+    body: str
+    title: Optional[str] = None
+
+
+class TemplateResponseTS(BaseModel):
+    id: str
+    name: str
+    templates: Dict[str, TemplateLanguageData]
 
 
 class TemplateResponse(BaseModel):
