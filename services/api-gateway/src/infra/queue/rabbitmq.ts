@@ -12,23 +12,60 @@ export interface QueuePublisher {
 const EXCHANGE = "notifications.direct";
 
 export class RabbitMQPublisher implements QueuePublisher {
-  private connection: any;
-  private channel: any;
+  private connection: amqp.Connection | null = null;
+  private channel: amqp.Channel | null = null;
 
   async init() {
-    this.connection = await amqp.connect(env.RABBITMQ_URL);
-    this.channel = await this.connection.createChannel();
+    try {
+      logger.info("Connecting to RabbitMQ...");
+      
+      // Connect with SSL/TLS support for CloudAMQP
+      this.connection = await amqp.connect(env.RABBITMQ_URL, {
+        // CloudAMQP uses SSL, so we need proper options
+        heartbeat: 60,
+      });
 
-    await this.channel.assertExchange(EXCHANGE, "direct", { durable: true });
+      this.connection.on("error", (err) => {
+        logger.error("RabbitMQ connection error:", err);
+      });
 
-    await this.channel.assertQueue("email.queue", { durable: true });
-    await this.channel.assertQueue("push.queue", { durable: true });
+      this.connection.on("close", () => {
+        logger.warn("RabbitMQ connection closed");
+      });
 
-    await this.channel.bindQueue("email.queue", EXCHANGE, "email");
-    await this.channel.bindQueue("push.queue", EXCHANGE, "push");
+      this.channel = await this.connection.createChannel();
 
-    logger.info("RabbitMQ connected and queues bound");
+      // Declare exchange
+      await this.channel.assertExchange(EXCHANGE, "direct", { durable: true });
+
+      // Declare queues with dead letter exchange support
+      await this.channel.assertQueue("email.queue", { 
+        durable: true,
+        arguments: {
+          "x-dead-letter-exchange": "failed",
+          "x-dead-letter-routing-key": "failed",
+        },
+      });
+
+      await this.channel.assertQueue("push.queue", { 
+        durable: true,
+        arguments: {
+          "x-dead-letter-exchange": "failed",
+          "x-dead-letter-routing-key": "failed",
+        },
+      });
+
+      // Bind queues to exchange
+      await this.channel.bindQueue("email.queue", EXCHANGE, "email");
+      await this.channel.bindQueue("push.queue", EXCHANGE, "push");
+
+      logger.info("RabbitMQ connected and queues bound");
+    } catch (error) {
+      logger.error("Failed to initialize RabbitMQ:", error);
+      throw error;
+    }
   }
+
 
   private getChannel(): amqp.Channel {
     if (!this.channel) {
